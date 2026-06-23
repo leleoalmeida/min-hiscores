@@ -462,6 +462,12 @@ class MinHiscoresPanel extends PluginPanel
 			add(center, BorderLayout.CENTER);
 		}
 
+		@Override
+		public Dimension getMaximumSize()
+		{
+			return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+		}
+
 		void updateBackground(boolean alternate)
 		{
 			Color bg = alternate ? ColorScheme.DARK_GRAY_COLOR : ColorScheme.DARKER_GRAY_COLOR;
@@ -586,6 +592,12 @@ class MinHiscoresPanel extends PluginPanel
 				timer.start();
 			});
 			add(trackButton, BorderLayout.EAST);
+		}
+
+		@Override
+		public Dimension getMaximumSize()
+		{
+			return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
 		}
 
 		void updateBackground(boolean alternate)
