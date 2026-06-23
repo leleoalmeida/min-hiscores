@@ -519,11 +519,36 @@ public class MinHiscoresPlugin extends Plugin
 		BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = img.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setColor(new Color(255, 185, 0));
-		g.fillOval(2, 2, 12, 12);
-		g.setColor(new Color(180, 120, 0));
-		g.setStroke(new BasicStroke(1.5f));
-		g.drawOval(2, 2, 12, 12);
+
+		// Pole
+		g.setColor(new Color(100, 100, 100));
+		g.fillRect(0, 0, 2, 16);
+
+		// Flag shape: left edge on pole, right edge waves out then back
+		Polygon flag = new Polygon(
+			new int[]{2, 14, 15, 13, 2},
+			new int[]{0,  0,  4,  8, 8},
+			5
+		);
+
+		// Checkerboard fill clipped to flag shape (2×2 px squares)
+		Shape prevClip = g.getClip();
+		g.setClip(flag);
+		for (int row = 0; row < 4; row++)
+		{
+			for (int col = 0; col < 7; col++)
+			{
+				g.setColor((row + col) % 2 == 0 ? Color.WHITE : Color.BLACK);
+				g.fillRect(2 + col * 2, row * 2, 2, 2);
+			}
+		}
+		g.setClip(prevClip);
+
+		// Thin outline on flag edges
+		g.setColor(new Color(60, 60, 60));
+		g.setStroke(new BasicStroke(0.5f));
+		g.drawPolygon(flag);
+
 		g.dispose();
 		return img;
 	}
