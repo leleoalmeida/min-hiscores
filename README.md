@@ -2,6 +2,8 @@
 
 A [RuneLite](https://runelite.net) external plugin that shows how much XP each of your skills needs to appear on the [OSRS HiScores](https://secure.runescape.com/m=hiscore_oldschool/overall) (top 2,000,000 players).
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A2E524E6VW)
+
 ## What it does
 
 For each skill, the plugin fetches the XP of the player ranked exactly 2,000,000th and compares it against your current XP. You can see at a glance which skills you're already ranked in, and exactly how much XP you still need for the ones you're not.
@@ -26,6 +28,4 @@ For each skill, the plugin fetches the XP of the player ranked exactly 2,000,000
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| HiScores Mode | Which HiScores table to compare against — Normal, Seasonal (DMM), etc. |
+ HiScores Mode - Which HiScores table to compare against — Normal, Seasonal (DMM), etc.
