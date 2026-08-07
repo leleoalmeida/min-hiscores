@@ -8,8 +8,6 @@ import net.runelite.api.GameState;
 import net.runelite.api.Skill;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.StatChanged;
-import net.runelite.api.gameval.VarPlayerID;
-import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.hiscore.HiscoreClient;
@@ -47,8 +45,6 @@ public class MinHiscoresPlugin extends Plugin
 	// Handles the RUNECRAFTING→RUNECRAFT mismatch as a fallback.
 	private static final Map<Skill, HiscoreSkill> SKILL_TO_HISCORE;
 
-	// Maps Skill → {startGoalVarpId, endGoalVarpId} using the same varp IDs as XpTrackerPlugin.
-	private static final Map<Skill, int[]> SKILL_GOAL_VARPS;
 
 	static
 	{
@@ -66,31 +62,6 @@ public class MinHiscoresPlugin extends Plugin
 			}
 		}
 
-		SKILL_GOAL_VARPS = new EnumMap<>(Skill.class);
-		SKILL_GOAL_VARPS.put(Skill.ATTACK,       new int[]{VarPlayerID.XPDROPS_ATTACK_START,       VarPlayerID.XPDROPS_ATTACK_END});
-		SKILL_GOAL_VARPS.put(Skill.STRENGTH,     new int[]{VarPlayerID.XPDROPS_STRENGTH_START,     VarPlayerID.XPDROPS_STRENGTH_END});
-		SKILL_GOAL_VARPS.put(Skill.DEFENCE,      new int[]{VarPlayerID.XPDROPS_DEFENCE_START,      VarPlayerID.XPDROPS_DEFENCE_END});
-		SKILL_GOAL_VARPS.put(Skill.RANGED,       new int[]{VarPlayerID.XPDROPS_RANGED_START,       VarPlayerID.XPDROPS_RANGED_END});
-		SKILL_GOAL_VARPS.put(Skill.PRAYER,       new int[]{VarPlayerID.XPDROPS_PRAYER_START,       VarPlayerID.XPDROPS_PRAYER_END});
-		SKILL_GOAL_VARPS.put(Skill.MAGIC,        new int[]{VarPlayerID.XPDROPS_MAGIC_START,        VarPlayerID.XPDROPS_MAGIC_END});
-		SKILL_GOAL_VARPS.put(Skill.RUNECRAFT,    new int[]{VarPlayerID.XPDROPS_RUNECRAFT_START,    VarPlayerID.XPDROPS_RUNECRAFT_END});
-		SKILL_GOAL_VARPS.put(Skill.HITPOINTS,    new int[]{VarPlayerID.XPDROPS_HITPOINTS_START,    VarPlayerID.XPDROPS_HITPOINTS_END});
-		SKILL_GOAL_VARPS.put(Skill.AGILITY,      new int[]{VarPlayerID.XPDROPS_AGILITY_START,      VarPlayerID.XPDROPS_AGILITY_END});
-		SKILL_GOAL_VARPS.put(Skill.HERBLORE,     new int[]{VarPlayerID.XPDROPS_HERBLORE_START,     VarPlayerID.XPDROPS_HERBLORE_END});
-		SKILL_GOAL_VARPS.put(Skill.THIEVING,     new int[]{VarPlayerID.XPDROPS_THIEVING_START,     VarPlayerID.XPDROPS_THIEVING_END});
-		SKILL_GOAL_VARPS.put(Skill.CRAFTING,     new int[]{VarPlayerID.XPDROPS_CRAFTING_START,     VarPlayerID.XPDROPS_CRAFTING_END});
-		SKILL_GOAL_VARPS.put(Skill.MINING,       new int[]{VarPlayerID.XPDROPS_MINING_START,       VarPlayerID.XPDROPS_MINING_END});
-		SKILL_GOAL_VARPS.put(Skill.SMITHING,     new int[]{VarPlayerID.XPDROPS_SMITHING_START,     VarPlayerID.XPDROPS_SMITHING_END});
-		SKILL_GOAL_VARPS.put(Skill.FISHING,      new int[]{VarPlayerID.XPDROPS_FISHING_START,      VarPlayerID.XPDROPS_FISHING_END});
-		SKILL_GOAL_VARPS.put(Skill.COOKING,      new int[]{VarPlayerID.XPDROPS_COOKING_START,      VarPlayerID.XPDROPS_COOKING_END});
-		SKILL_GOAL_VARPS.put(Skill.FIREMAKING,   new int[]{VarPlayerID.XPDROPS_FIREMAKING_START,   VarPlayerID.XPDROPS_FIREMAKING_END});
-		SKILL_GOAL_VARPS.put(Skill.WOODCUTTING,  new int[]{VarPlayerID.XPDROPS_WOODCUTTING_START,  VarPlayerID.XPDROPS_WOODCUTTING_END});
-		SKILL_GOAL_VARPS.put(Skill.FLETCHING,    new int[]{VarPlayerID.XPDROPS_FLETCHING_START,    VarPlayerID.XPDROPS_FLETCHING_END});
-		SKILL_GOAL_VARPS.put(Skill.SLAYER,       new int[]{VarPlayerID.XPDROPS_SLAYER_START,       VarPlayerID.XPDROPS_SLAYER_END});
-		SKILL_GOAL_VARPS.put(Skill.FARMING,      new int[]{VarPlayerID.XPDROPS_FARMING_START,      VarPlayerID.XPDROPS_FARMING_END});
-		SKILL_GOAL_VARPS.put(Skill.CONSTRUCTION, new int[]{VarPlayerID.XPDROPS_CONSTRUCTION_START, VarPlayerID.XPDROPS_CONSTRUCTION_END});
-		SKILL_GOAL_VARPS.put(Skill.HUNTER,       new int[]{VarPlayerID.XPDROPS_HUNTER_START,       VarPlayerID.XPDROPS_HUNTER_END});
-		SKILL_GOAL_VARPS.put(Skill.SAILING,      new int[]{VarPlayerID.XPDROPS_SAILING_START,      VarPlayerID.XPDROPS_SAILING_END});
 	}
 
 	// The rank we use as the XP target for unranked skills.
@@ -100,7 +71,6 @@ public class MinHiscoresPlugin extends Plugin
 	private static final int TARGET_PAGE = TARGET_RANK / 25; // = 80000
 
 	@Inject private Client client;
-	@Inject private ClientThread clientThread;
 	@Inject private OkHttpClient okHttpClient;
 	@Inject private HiscoreClient hiscoreClient;
 	@Inject private ClientToolbar clientToolbar;
@@ -192,35 +162,6 @@ public class MinHiscoresPlugin extends Plugin
 		{
 			panel.updateRow(event.getSkill());
 		}
-	}
-
-	void setXpGoal(Skill skill)
-	{
-		int[] varps = SKILL_GOAL_VARPS.get(skill);
-		if (varps == null)
-		{
-			log.debug("No varp mapping for skill {}", skill);
-			return;
-		}
-
-		int curXp = currentXp.getOrDefault(skill, -1);
-		long minXp = minimumXp.getOrDefault(skill, -1L);
-		if (curXp < 0 || minXp <= 0 || minXp - curXp <= 0)
-		{
-			return;
-		}
-
-		int startGoalVarp = varps[0];
-		int endGoalVarp = varps[1];
-
-		clientThread.invokeLater(() ->
-		{
-			int[] varpArray = client.getVarps();
-			varpArray[startGoalVarp] = curXp;
-			varpArray[endGoalVarp] = (int) minXp;
-			client.queueChangedVarp(startGoalVarp);
-			client.queueChangedVarp(endGoalVarp);
-		});
 	}
 
 	private void notifyLoggedIn()

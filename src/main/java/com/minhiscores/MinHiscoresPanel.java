@@ -572,20 +572,24 @@ class MinHiscoresPanel extends PluginPanel
 			center.add(currentXpLabel);
 			add(center, BorderLayout.CENTER);
 
-			trackButton = new JButton("Track");
+			trackButton = new JButton("Copy XP");
 			trackButton.setFont(FontManager.getRunescapeSmallFont());
 			trackButton.setFocusPainted(false);
 			trackButton.setEnabled(false);
 			trackButton.setVisible(false);
-			trackButton.setToolTipText("Set as XP Tracker goal");
+			trackButton.setToolTipText("Copy target XP to clipboard");
 			trackButton.addActionListener(e ->
 			{
-				plugin.setXpGoal(skill);
-				trackButton.setText("Done!");
+				long minXp = plugin.minimumXp.getOrDefault(skill, -1L);
+				if (minXp <= 0) return;
+				java.awt.datatransfer.StringSelection sel =
+					new java.awt.datatransfer.StringSelection(String.valueOf(minXp));
+				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(sel, null);
+				trackButton.setText("Copied!");
 				trackButton.setEnabled(false);
 				Timer timer = new Timer(1500, ev ->
 				{
-					trackButton.setText("Track");
+					trackButton.setText("Copy XP");
 					trackButton.setEnabled(true);
 				});
 				timer.setRepeats(false);
